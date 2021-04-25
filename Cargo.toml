@@ -1,12 +1,13 @@
 
 [package]
-name = "vulkan-tutorial-rust"
+name = "darcy-vulkan-tutorial-rust"
 version = "1.0.0"
 edition = "2018"
 authors = ["unknownue <usami-ssc@protonmail.com>"]
 
 [dependencies]
-winit     = "0.20.0"
+#winit     = "0.20.0"
+winit     = { git = "https://github.com/rust-windowing/winit.git" }
 ash       = "0.29.0"
 num       = "0.2"
 cgmath    = "0.17.0"
@@ -25,96 +26,14 @@ objc  = "0.2.5"
 [target.'cfg(target_os = "windows")'.dependencies]
 winapi = { version = "0.3.5", features = ["windef", "libloaderapi"] }
 
+[lib]
+path = "src/lib.rs"
 
-# tutorial examples shortcut ---------------------------------
 [[bin]]
-name = "00"
-path = "src/tutorials/00_base_code.rs"
-[[bin]]
-name = "01"
-path = "src/tutorials/01_instance_creation.rs"
-[[bin]]
-name = "02"
-path = "src/tutorials/02_validation_layers.rs"
-[[bin]]
-name = "03"
-path = "src/tutorials/03_physical_device_selection.rs"
-[[bin]]
-name = "04"
-path = "src/tutorials/04_logical_device.rs"
-[[bin]]
-name = "05"
-path = "src/tutorials/05_window_surface.rs"
-[[bin]]
-name = "06"
-path = "src/tutorials/06_swap_chain_creation.rs"
-[[bin]]
-name = "07"
-path = "src/tutorials/07_image_view.rs"
-[[bin]]
-name = "08"
-path = "src/tutorials/08_graphics_pipeline.rs"
-[[bin]]
-name = "09"
-path = "src/tutorials/09_shader_modules.rs"
-[[bin]]
-name = "10"
-path = "src/tutorials/10_fixed_functions.rs"
-[[bin]]
-name = "11"
-path = "src/tutorials/11_render_passes.rs"
-[[bin]]
-name = "12"
-path = "src/tutorials/12_graphics_pipeline_complete.rs"
-[[bin]]
-name = "13"
-path = "src/tutorials/13_framebuffers.rs"
-[[bin]]
-name = "14"
-path = "src/tutorials/14_command_buffers.rs"
-[[bin]]
-name = "15"
-path = "src/tutorials/15_hello_triangle.rs"
-[[bin]]
-name = "16"
-path = "src/tutorials/16_swap_chain_recreation.rs"
-[[bin]]
-name = "17"
-path = "src/tutorials/17_vertex_input.rs"
-[[bin]]
-name = "18"
-path = "src/tutorials/18_vertex_buffer.rs"
-[[bin]]
-name = "19"
-path = "src/tutorials/19_staging_buffer.rs"
-[[bin]]
-name = "20"
-path = "src/tutorials/20_index_buffer.rs"
-[[bin]]
-name = "21"
-path = "src/tutorials/21_descriptor_layout.rs"
-[[bin]]
-name = "22"
-path = "src/tutorials/22_descriptor_sets.rs"
-[[bin]]
-name = "23"
-path = "src/tutorials/23_texture_image.rs"
-[[bin]]
-name = "24"
-path = "src/tutorials/24_sampler.rs"
-[[bin]]
-name = "25"
-path = "src/tutorials/25_texture_mapping.rs"
-[[bin]]
-name = "26"
-path = "src/tutorials/26_depth_buffering.rs"
-[[bin]]
-name = "27"
-path = "src/tutorials/27_model_loading.rs"
-[[bin]]
-name = "28"
-path = "src/tutorials/28_mipmapping.rs"
-[[bin]]
-name = "29"
-path = "src/tutorials/29_multisampling.rs"
-# ----------------------------------------------------------
+name = "darcy"
+path = "src/bin.rs"
+
+[workspace]
+members = [
+    "tutorial"
+]
