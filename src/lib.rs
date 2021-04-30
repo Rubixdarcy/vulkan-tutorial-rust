@@ -1,13 +1,9 @@
-pub use ash::version::{
-    DeviceV1_0,
-    EntryV1_0,
-    InstanceV1_0,
-};
 use ash::{
     vk,
     Entry,
     Instance,
 };
+use validation::Validation;
 use std::ffi::CString;
 use winit::event::{
     ElementState,
@@ -20,46 +16,80 @@ use winit::event_loop::{
     ControlFlow,
     EventLoop,
 };
-use constant::*;
+use prelude::*;
 
+mod prelude;
 mod constant;
+pub mod tool;
+mod validation;
 
+const VALIDATION_ENABLED: bool = true;
 pub struct VulkanApp {
     entry: Entry,
     instance: Instance,
+    validation: Validation,
 }
 
 impl VulkanApp {
 
     pub fn create() -> Self {
+        let entry = Entry::new().unwrap();
+        let instance: Instance;
+        let mut app_info = vk::ApplicationInfo::builder();
+        let mut create_info = vk::InstanceCreateInfo::builder();
+
+
+        //////////////////// SHOW EXTENSIONS ////////////////////
+        entry.enumerate_instance_extension_properties()
+            .iter()
+            .flat_map(|p| p.iter())
+            .for_each(|p| println!("{:?}", p));
+
+
+        //////////////////// APP INFO ////////////////////
         let app_name = CString::new(APPLICATION_NAME).unwrap();
         let engine_name = CString::new(ENGINE_NAME).unwrap();
 
-        let app_info = vk::ApplicationInfo::builder()
+        app_info = app_info
             .application_name(&app_name)
             .application_version(APPLICATION_VERSION)
             .engine_name(&engine_name)
             .engine_version(ENGINE_VERSION)
             .api_version(API_VERSION);
 
-        let create_info = vk::InstanceCreateInfo::builder().application_info(&app_info);
 
-        let entry = Entry::new().unwrap();
+        //////////////////// VALIDATION ////////////////////
+        let validation = Self::default_validation();
+        let validation_names_cstrings: Vec<CString> = validation.layers.iter()
+            .cloned()
+            .map(|s| CString::new(s).unwrap())
+            .collect();
+        let validation_names_ptrs: Vec<*const i8> = validation_names_cstrings.iter()
+            .map(|cstr| cstr.as_ptr())
+            .collect();
 
-        let instance: Instance;
+        if validation.enabled {
+            println!("Using validation");
+            if !validation.check_validation_layer_support(&entry) {
+                panic!("Validation layers requested but not available.")
+            }
 
+            create_info = create_info.enabled_layer_names(&validation_names_ptrs);
+        }
+            
+
+        //////////////////// CREATE INSTANCE ////////////////////
+        create_info = create_info.application_info(&app_info);
         unsafe {
             instance = entry
                 .create_instance(&create_info, None)
                 .expect("Instance creation error");
         }
 
-        for prop in entry.enumerate_instance_extension_properties().iter().flat_map(|p| p.iter()) {
-            println!("{:?}", prop);
-        }
-
-        Self { entry, instance }
+        Self { entry, instance, validation }
     }
+
+
 
     pub fn init_window(event_loop: &EventLoop<()>) -> winit::window::Window {
         winit::window::WindowBuilder::new()
@@ -90,6 +120,15 @@ impl VulkanApp {
             },
             _ => (),
         })
+    }
+
+    fn default_validation() -> Validation {
+        validation::Validation {
+            layers: vec![
+                "VK_LAYER_KHRONOS_validation".to_owned()
+            ],
+            enabled: VALIDATION_ENABLED,
+        }
     }
 }
 
