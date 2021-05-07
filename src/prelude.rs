@@ -1,4 +1,5 @@
 pub use crate::constant::*;
+pub use crate::VulkanApp;
 pub use crate::tool;
 pub use ash::Entry;
 pub use ash::version::{

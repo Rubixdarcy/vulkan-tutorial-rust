@@ -5,29 +5,18 @@ use ash::{
 };
 use validation::Validation;
 use std::ffi::CString;
-use winit::event::{
-    ElementState,
-    Event,
-    KeyboardInput,
-    VirtualKeyCode,
-    WindowEvent,
-};
-use winit::event_loop::{
-    ControlFlow,
-    EventLoop,
-};
 use prelude::*;
 
-mod prelude;
-mod constant;
+pub mod prelude;
+pub mod constant;
 pub mod tool;
-mod validation;
+pub mod validation;
 
 const VALIDATION_ENABLED: bool = true;
 pub struct VulkanApp {
-    entry: Entry,
+    _entry: Entry,
     instance: Instance,
-    validation: Validation,
+    _validation: Validation,
 }
 
 impl VulkanApp {
@@ -86,40 +75,10 @@ impl VulkanApp {
                 .expect("Instance creation error");
         }
 
-        Self { entry, instance, validation }
-    }
+        //////////////////// PHYSICAL DEVICE ////////////////////
+        let _physical_device = Self::pick_physical_device(&instance);
 
-
-
-    pub fn init_window(event_loop: &EventLoop<()>) -> winit::window::Window {
-        winit::window::WindowBuilder::new()
-            .with_title(WINDOW_TITLE)
-            .with_inner_size(winit::dpi::LogicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT))
-            .build(event_loop)
-            .expect("Failed to create window.")
-    }
-
-    pub fn main_loop(event_loop: EventLoop<()>) {
-        event_loop.run(move |event, _, control_flow| match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                WindowEvent::KeyboardInput { input, .. } => match input {
-                    KeyboardInput {
-                        virtual_keycode,
-                        state,
-                        ..
-                    } => match (virtual_keycode, state) {
-                        (Some(VirtualKeyCode::Escape), ElementState::Pressed) => {
-                            dbg!();
-                            *control_flow = ControlFlow::Exit
-                        }
-                        _ => {}
-                    },
-                },
-                _ => {}
-            },
-            _ => (),
-        })
+        Self { _entry: entry, instance, _validation: validation }
     }
 
     fn default_validation() -> Validation {
@@ -130,6 +89,50 @@ impl VulkanApp {
             enabled: VALIDATION_ENABLED,
         }
     }
+
+    fn pick_physical_device(instance: &Instance) -> vk::PhysicalDevice {
+        unsafe { instance.enumerate_physical_devices() }
+            .unwrap()
+            .into_iter()
+            .filter(|&device| Self::is_device_suitable(instance, device))
+            .next()
+            .expect("suitable physical device")
+    }
+
+    fn is_device_suitable(instance: &Instance, device: vk::PhysicalDevice) -> bool {
+        QueueFamilyIndicies::for_device(instance, device).is_complete()
+    }
+
+    // fn pick_physical_device(instance: &Instance) -> vk::PhysicalDevice {
+    //     unsafe { instance.enumerate_physical_devices() }
+    //         .unwrap()
+    //         .into_iter()
+    //         .map(|device| (device, Self::rate_device_suitability(instance, device)))
+    //         .max_by_key(|&(_d, s)| s)
+    //         .filter(|&(_d, s)| s > 0)
+    //         .map(|(d, _s)| d)
+    //         .expect("suitable physical device")
+    // }
+
+    // fn rate_device_suitability(instance: &Instance, device: vk::PhysicalDevice) -> u32 {
+    //     let props = unsafe { instance.get_physical_device_properties(device) };
+    //     let features = unsafe { instance.get_physical_device_features(device) };
+
+    //     if features.geometry_shader == 0 {
+    //         return 0;
+    //     }
+
+    //     let discrete = if props.device_type == vk::PhysicalDeviceType::DISCRETE_GPU {
+    //         1000
+    //     } else {
+    //         0
+    //     };
+    //     let dimension = props.limits.max_image_dimension2_d;
+
+    //     discrete + dimension
+    // }
+
+
 }
 
 impl Drop for VulkanApp {
@@ -137,5 +140,33 @@ impl Drop for VulkanApp {
         unsafe {
             self.instance.destroy_instance(None);
         }
+    }
+}
+
+#[derive(Copy, Clone, Debug, Default)]
+struct QueueFamilyIndicies {
+    graphics: Option<usize>,
+}
+
+impl QueueFamilyIndicies {
+    fn for_device(instance: &Instance, device: vk::PhysicalDevice) -> Self {
+        let mut indicies = Self::default();
+
+        let families = unsafe { instance.get_physical_device_queue_family_properties(device) };
+
+        for (i, queue_family) in families.into_iter().enumerate() {
+            if indicies.is_complete() {
+                break;
+            }
+            if queue_family.queue_flags.contains(vk::QueueFlags::GRAPHICS) {
+                indicies.graphics = Some(i);
+            }
+        }
+
+        indicies
+    }
+
+    fn is_complete(self) -> bool {
+        self.graphics.is_some()
     }
 }
