@@ -1,5 +1,17 @@
 use darcy_vulkan_tutorial_rust::prelude::*;
-use winit::{event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent}, event_loop::{ControlFlow, EventLoop}};
+use winit::{
+    event::{
+        ElementState,
+        Event,
+        KeyboardInput,
+        VirtualKeyCode,
+        WindowEvent,
+    },
+    event_loop::{
+        ControlFlow,
+        EventLoop,
+    },
+};
 
 fn main() {
     let event_loop = EventLoop::new();
